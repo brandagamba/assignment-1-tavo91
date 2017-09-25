@@ -1,3 +1,4 @@
+#!/Users/gustavoaguilar/anaconda3/envs/py35/bin/python
 """dip_hw1.py: Starter file to run howework 1"""
 
 #Example Usage: ./dip_hw1_resize -i imagename.jpg -fx 1.5 -fy = 1.5 -m nearest_neighbor
@@ -86,8 +87,12 @@ def main():
     #Write output file
     outputDir = 'output/resize/'
 
-    output_image_name = outputDir+image_name+interpolation+datetime.now().strftime("%m%d-%H%M%S")+".jpg"    
+    output_image_name = outputDir + image_name + interpolation + ".jpg"
+    # output_image_name = outputDir + image_name + interpolation + datetime.now().strftime("%m%d-%H%M%S") + ".jpg"
     cv2.imwrite(output_image_name, resampled_image)
+
+    # display_image(image_name, input_image)
+    # display_image(output_image_name, resampled_image)
 
 
 if __name__ == "__main__":
