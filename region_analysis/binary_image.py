@@ -1,37 +1,61 @@
 import numpy as np
 
-class binary_image:
 
-    def compute_histogram(self, image):
-        """Computes the histogram of the input image
-        takes as input:
-        image: a grey scale image
-        returns a histogram"""
+def compute_histogram(image):
+    """Computes the histogram of the input image
+    takes as input:
+    image: a grey scale image
+    returns a histogram"""
 
-        hist = [0]*256
+    hist = [0]*256
 
+    for row in range(image.shape[0]):
+        for col in range(image.shape[1]):
+            hist[image[row, col]] += 1
 
-        return hist
+    return hist
 
-    def find_optimal_threshold(self, hist):
-        """analyses a histogram it to find the optimal threshold value assuming a bimodal histogram
-        takes as input
-        hist: a bimodal histogram
-        returns: an optimal threshold value"""
+def find_optimal_threshold(hist):
+    """analyses a histogram it to find the optimal threshold value assuming a bimodal histogram
+    takes as input
+    hist: a bimodal histogram
+    returns: an optimal threshold value"""
 
-        threshold = 0
+    total = sum(hist)  # The sum of all the frequencies
+    hsize = len(hist)  # The number of K-levels
 
+    n_hist = [value / total for value in hist]  # Normalized histogram
+    k_half = round(len(hist) / 2)               # Calculating halves
 
-        return threshold
+    thresh = k_half  # Initializing threshold
+    m1, m2 = 0, 0    # Initializing means
 
-    def binarize(self, image):
-        """Comptues the binary image of the the input image based on histogram analysis and thresholding
-        take as input
-        image: an grey scale image
-        returns: a binary image"""
+    while True:
+        exp_1 = sum([k * n_hist[k] for k in range(0, k_half)])
+        exp_2 = sum([k * n_hist[k] for k in range(k_half, hsize)])
 
-        bin_img = image.copy()
+        thresh = (exp_1 + exp_2) / 2
 
-        return bin_img
+        if m1 - exp_1 != 0 and m2 - exp_2 != 0:
+            m1 = exp_1
+            m2 = exp_2
+        else:
+            break
+
+    return thresh
+
+def binarize(image, threshold):
+    """Comptues the binary image of the the input image based on histogram analysis and thresholding
+    take as input
+    image: an grey scale image
+    returns: a binary image"""
+
+    bin_img = np.zeros(image.shape)
+
+    for row in range(bin_img.shape[0]):
+        for col in range(bin_img.shape[1]):
+            if image[row, col] < threshold:
+                bin_img[row, col] = 255
+    return bin_img
 
 

@@ -1,3 +1,4 @@
+#!/Users/gustavoaguilar/anaconda3/envs/py35/bin/python
 """dip_hw1.py: Starter file to run howework 1"""
 
 #Example Usage: ./dip_hw1_region_analysis -i imagename.jpg
@@ -48,8 +49,7 @@ def main():
         input_image = cv2.imread(args.image, 0)
 
 
-    bin_img = bi.binary_image()
-    hist = bin_img.compute_histogram(input_image)
+    hist = bi.compute_histogram(input_image)
 
     outputDir = 'output/cellct/'
 
@@ -57,24 +57,24 @@ def main():
     hist_fig = plt.plot(hist)
     plt.savefig(outputDir+"hist.png")
 
-    threshold = bin_img.find_optimal_threshold(hist)
+    threshold = bi.find_optimal_threshold(hist)
     print("Optimal threshold: ", threshold)
 
-    binary_img = bin_img.binarize(input_image)
+    binary_img = bi.binarize(input_image, threshold)
     output_image_name = outputDir + "binary_image_" + datetime.now().strftime("%m%d-%H%M%S") + ".jpg"
     cv2.imwrite(output_image_name, binary_img)
 
 
-    #blobcoloring
-    cell_count_obj = cc.cell_counting()
-
-    regions = cell_count_obj.blob_coloring(binary_img)
-    stats = cell_count_obj.compute_statistics(regions)
-
-
-    cell_stats_img = cell_count_obj.mark_regions_image(binary_img, stats)
-    output_image_name = outputDir + "cell_stats_" + datetime.now().strftime("%m%d-%H%M%S") + ".jpg"
-    cv2.imwrite(output_image_name, cell_stats_img)
+    # #blobcoloring
+    # cell_count_obj = cc.cell_counting()
+    #
+    # regions = cell_count_obj.blob_coloring(binary_img)
+    # stats = cell_count_obj.compute_statistics(regions)
+    #
+    #
+    # cell_stats_img = cell_count_obj.mark_regions_image(binary_img, stats)
+    # output_image_name = outputDir + "cell_stats_" + datetime.now().strftime("%m%d-%H%M%S") + ".jpg"
+    # cv2.imwrite(output_image_name, cell_stats_img)
 
 
 
