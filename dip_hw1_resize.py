@@ -81,8 +81,7 @@ def main():
             interpolation = args.interpolate
 
 
-    resample_obj = rs.resample()
-    resampled_image = resample_obj.resize(input_image, fx=fx, fy=fy, interpolation=interpolation)
+    resampled_image = rs.resize(input_image, fx=fx, fy=fy, interpolation=interpolation)
 
     #Write output file
     outputDir = 'output/resize/'

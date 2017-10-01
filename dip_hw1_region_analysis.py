@@ -53,7 +53,7 @@ def main():
 
     outputDir = 'output/cellct/'
 
-    #Saving histogram to output directory    
+    # Saving histogram to output directory
     hist_fig = plt.plot(hist)
     plt.savefig(outputDir+"hist.png")
 
@@ -65,14 +65,11 @@ def main():
     cv2.imwrite(output_image_name, binary_img)
 
 
-    # #blobcoloring
-    # cell_count_obj = cc.cell_counting()
-    #
-    # regions = cell_count_obj.blob_coloring(binary_img)
-    # stats = cell_count_obj.compute_statistics(regions)
-    #
-    #
-    # cell_stats_img = cell_count_obj.mark_regions_image(binary_img, stats)
+    # blobcoloring
+    regions = cc.blob_coloring(binary_img)
+    stats = cc.compute_statistics(regions)
+
+    # cell_stats_img = cc.mark_regions_image(binary_img, stats)
     # output_image_name = outputDir + "cell_stats_" + datetime.now().strftime("%m%d-%H%M%S") + ".jpg"
     # cv2.imwrite(output_image_name, cell_stats_img)
 

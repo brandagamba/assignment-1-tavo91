@@ -3,114 +3,110 @@ import numpy as np
 from resize import interpolation as interp
 from math import floor, ceil
 
-class resample:
 
-    def resize(self, image, fx = None, fy = None, interpolation = None):
-        """calls the appropriate funciton to resample an image based on the interpolation method
-        image: the image to be resampled
-        fx: scale along x direction (eg. 0.5, 1.5, 2.5)
-        fx: scale along y direction (eg. 0.5, 1.5, 2.5)
-        interpolation: method used for interpolation ('either bilinear or nearest_neighbor)
-        returns a resized image based on the interpolation method
-        """
+def resize(image, fx = None, fy = None, interpolation = None):
+    """calls the appropriate funciton to resample an image based on the interpolation method
+    image: the image to be resampled
+    fx: scale along x direction (eg. 0.5, 1.5, 2.5)
+    fx: scale along y direction (eg. 0.5, 1.5, 2.5)
+    interpolation: method used for interpolation ('either bilinear or nearest_neighbor)
+    returns a resized image based on the interpolation method
+    """
 
-        if interpolation == 'bilinear':
-            return self.bilinear_interpolation(image, fx, fy)
+    if interpolation == 'bilinear':
+        return bilinear_interpolation(image, fx, fy)
 
-        elif interpolation == 'nearest_neighbor':
-            return self.nearest_neighbor(image, fx, fy)
+    elif interpolation == 'nearest_neighbor':
+        return nearest_neighbor(image, fx, fy)
 
-    def nearest_neighbor(self, image, fx, fy):
-        """resizes an image using nearest neighbor interpolation approximation for resampling
-        image: the image to be resampled
-        fx: scale along x direction (eg. 0.5, 1.5, 2.5)
-        fx: scale along y direction (eg. 0.5, 1.5, 2.5)
-        returns a resized image based on the nearest neighbor interpolation method
-        """
+def nearest_neighbor(image, fx, fy):
+    """resizes an image using nearest neighbor interpolation approximation for resampling
+    image: the image to be resampled
+    fx: scale along x direction (eg. 0.5, 1.5, 2.5)
+    fx: scale along y direction (eg. 0.5, 1.5, 2.5)
+    returns a resized image based on the nearest neighbor interpolation method
+    """
 
-        w_old, h_old = image.shape
+    w_old, h_old = image.shape
 
-        w_new = int(w_old * float(fx))
-        h_new = int(h_old * float(fy))
+    w_new = int(w_old * float(fx))
+    h_new = int(h_old * float(fy))
 
-        x_scale = w_new / w_old
-        y_scale = h_new / h_old
+    x_scale = w_new / w_old
+    y_scale = h_new / h_old
 
-        image_new = np.zeros((w_new, h_new))
+    image_new = np.zeros((w_new, h_new))
 
-        # print("Old Image Shape:", image.shape)
-        # print("New Image Shape:", image_new.shape)
-        # print("Scale:", x_scale, y_scale)
+    # print("Old Image Shape:", image.shape)
+    # print("New Image Shape:", image_new.shape)
+    # print("Scale:", x_scale, y_scale)
 
-        for row in range(w_new):
-            for col in range(h_new):
+    for row in range(w_new):
+        for col in range(h_new):
 
-                # i = round(row / x_scale)
-                # j = round(col / y_scale)
+            # i = round(row / x_scale)
+            # j = round(col / y_scale)
 
-                i = min(round(row / x_scale), w_old - 1)
-                j = min(round(col / y_scale), h_old - 1)
+            i = min(round(row / x_scale), w_old - 1)
+            j = min(round(col / y_scale), h_old - 1)
 
-                image_new[row, col] = image[i, j]
+            image_new[row, col] = image[i, j]
 
-        return image_new
-
-
-    def bilinear_interpolation(self, image, fx, fy):
-        """resizes an image using bilinear interpolation approximation for resampling
-        image: the image to be resampled
-        fx: scale along x direction (eg. 0.5, 1.5, 2.5)
-        fx: scale along y direction (eg. 0.5, 1.5, 2.5)
-        returns a resized image based on the bilinear interpolation method
-        """
-
-        w_old, h_old = image.shape
-
-        w_new = int(w_old * float(fx))
-        h_new = int(h_old * float(fy))
-
-        x_scale = w_new / w_old
-        y_scale = h_new / h_old
-
-        image_new = np.zeros((w_new, h_new))
-
-        for row in range(w_new-1):
-            for col in range(h_new-1):
-                # i = min(row / x_scale, w_old - 1)
-                # j = min(col / y_scale, h_old - 1)
-
-                i = row / x_scale
-                j = col / y_scale
-
-                if not (row % x_scale) and not (col % y_scale):
-                    # print("perfect match!", i, j)
-                    image_new[row, col] = image[int(i), int(j)]
-                    continue
+    return image_new
 
 
-                unk = {'x': i, 'y': j}
+def bilinear_interpolation(image, fx, fy):
+    """resizes an image using bilinear interpolation approximation for resampling
+    image: the image to be resampled
+    fx: scale along x direction (eg. 0.5, 1.5, 2.5)
+    fx: scale along y direction (eg. 0.5, 1.5, 2.5)
+    returns a resized image based on the bilinear interpolation method
+    """
 
-                p11 = {'x': min(floor(row / x_scale), w_old - 1),
-                       'y': min(floor(col / y_scale), h_old - 1)}
+    w_old, h_old = image.shape
 
-                p12 = {'x': min(floor(row / x_scale), w_old - 1),
-                       'y': min(floor(col / y_scale) + 1, h_old - 1)}
+    w_new = int(w_old * float(fx))
+    h_new = int(h_old * float(fy))
 
-                # assert p11['y'] != p12['y'], "p11 and p12 are the same point: {} - {}".format(p11, p12)
+    x_scale = w_new / w_old
+    y_scale = h_new / h_old
 
-                p21 = {'x': min(floor(row / x_scale) + 1, w_old - 1),
-                       'y': min(floor(col / y_scale), h_old - 1)}
+    image_new = np.zeros((w_new, h_new))
 
-                p22 = {'x': min(floor(row / x_scale) + 1, w_old - 1),
-                       'y': min(floor(col / y_scale) + 1, h_old - 1)}
+    for row in range(w_new-1):
+        for col in range(h_new-1):
+            # i = min(row / x_scale, w_old - 1)
+            # j = min(col / y_scale, h_old - 1)
 
-                # assert p21['y'] != p22['y'], "p21 and p22 are the same point"
+            i = row / x_scale
+            j = col / y_scale
 
-                p11['intensity'] = image[p11['x'], p11['y']]
-                p12['intensity'] = image[p12['x'], p12['y']]
-                p21['intensity'] = image[p21['x'], p21['y']]
-                p22['intensity'] = image[p22['x'], p22['y']]
+            # If it is a known point
+            if not (row % x_scale) and not (col % y_scale):
+                image_new[row, col] = image[int(i), int(j)]
+                continue
 
-                image_new[row, col] = interp.bilinear_interpolation(p11, p12, p21, p22, unk)
+            unk = {'x': i, 'y': j}
 
-        return image_new
+            p11 = {'x': min(floor(row / x_scale), w_old - 1),
+                   'y': min(floor(col / y_scale), h_old - 1)}
+            p12 = {'x': min(floor(row / x_scale), w_old - 1),
+                   'y': min(floor(col / y_scale) + 1, h_old - 1)}
+
+            # assert p11['y'] != p12['y'], "p11 and p12 are the same point: {} - {}".format(p11, p12)
+
+            p21 = {'x': min(floor(row / x_scale) + 1, w_old - 1),
+                   'y': min(floor(col / y_scale), h_old - 1)}
+            p22 = {'x': min(floor(row / x_scale) + 1, w_old - 1),
+                   'y': min(floor(col / y_scale) + 1, h_old - 1)}
+
+            # assert p21['y'] != p22['y'], "p21 and p22 are the same point"
+
+            p11['intensity'] = image[p11['x'], p11['y']]
+            p12['intensity'] = image[p12['x'], p12['y']]
+            p21['intensity'] = image[p21['x'], p21['y']]
+            p22['intensity'] = image[p22['x'], p22['y']]
+
+            image_new[row, col] = interp.bilinear_interpolation(p11, p12, p21, p22, unk)
+
+    return image_new
