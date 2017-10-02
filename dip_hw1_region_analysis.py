@@ -64,21 +64,15 @@ def main():
     output_image_name = outputDir + "binary_image_" + datetime.now().strftime("%m%d-%H%M%S") + ".jpg"
     cv2.imwrite(output_image_name, binary_img)
 
-
     # blobcoloring
     regions = cc.blob_coloring(binary_img)
     stats = cc.compute_statistics(regions)
 
     cell_stats_img = cc.mark_regions_image(regions, stats)
+    output_image_name = outputDir + "cell_stats_" + datetime.now().strftime("%m%d-%H%M%S") + ".jpg"
+    cv2.imwrite(output_image_name, cell_stats_img)
+
     display_image("temporal", cell_stats_img)
-    # output_image_name = outputDir + "cell_stats_" + datetime.now().strftime("%m%d-%H%M%S") + ".jpg"
-    # cv2.imwrite(output_image_name, cell_stats_img)
-
-    # cell_stats_img = cc.mark_regions_image(binary_img, stats)
-    # output_image_name = outputDir + "cell_stats_" + datetime.now().strftime("%m%d-%H%M%S") + ".jpg"
-    # cv2.imwrite(output_image_name, cell_stats_img)
-
-
 
 if __name__ == "__main__":
     main()
