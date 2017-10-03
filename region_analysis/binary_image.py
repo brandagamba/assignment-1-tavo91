@@ -1,6 +1,19 @@
 import numpy as np
 
 
+def standarize_background(bin_image):
+    counter = {0: 0, 255: 0}
+    for row in range(bin_image.shape[0]):
+        for col in range(bin_image.shape[1]):
+            counter[bin_image[row, col]] += 1
+
+    if counter[255] > counter[0]:
+        print("-- Switching colors to have black as background")
+        return np.array([[0 if bin_image[row, col] else 255
+                          for col in range(bin_image.shape[1])]
+                         for row in range(bin_image.shape[0])])
+    return bin_image
+
 def compute_histogram(image):
     """Computes the histogram of the input image
     takes as input:
@@ -56,6 +69,8 @@ def binarize(image, threshold):
         for col in range(bin_img.shape[1]):
             if image[row, col] < threshold:
                 bin_img[row, col] = 255
-    return bin_img
 
+    bin_img = standarize_background(bin_img)
+
+    return bin_img
 

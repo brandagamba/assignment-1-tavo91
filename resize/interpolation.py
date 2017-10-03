@@ -6,13 +6,12 @@ def linear_interpolation(pt1, pt2, int1, int2, unknown):
     unknown: take an unknown location
     return the f(unknown) or intentity at unknown"""
 
-    # assert pt2 - pt1 != 0, "The difference pt1 - pt2 cannot be zero. " \
-    #                        "pt1 = {}; pt2 = {}".format(pt1, pt2)
-
-    term1 = int1 * (pt2 - unknown) / (pt2 - pt1)
-    term2 = int2 * (unknown - pt1) / (pt2 - pt1)
-
-    return term1 + term2
+    if pt2 - pt1 != 0:
+        term1 = int1 * (pt2 - unknown) / (pt2 - pt1)
+        term2 = int2 * (unknown - pt1) / (pt2 - pt1)
+        return term1 + term2
+    else:
+        return int1
 
 
 def bilinear_interpolation(pt11, pt12, pt21, pt22, unknown):

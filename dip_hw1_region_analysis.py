@@ -48,14 +48,13 @@ def main():
         image_name = args.image.split(".")[0]
         input_image = cv2.imread(args.image, 0)
 
-
     hist = bi.compute_histogram(input_image)
 
     outputDir = 'output/cellct/'
 
     # Saving histogram to output directory
     hist_fig = plt.plot(hist)
-    plt.savefig(outputDir+"hist.png")
+    plt.savefig(outputDir+image_name+"-hist.png")
 
     threshold = bi.find_optimal_threshold(hist)
     print("Optimal threshold: ", threshold)
@@ -71,8 +70,6 @@ def main():
     cell_stats_img = cc.mark_regions_image(regions, stats)
     output_image_name = outputDir + "cell_stats_" + datetime.now().strftime("%m%d-%H%M%S") + ".jpg"
     cv2.imwrite(output_image_name, cell_stats_img)
-
-    display_image("temporal", cell_stats_img)
 
 if __name__ == "__main__":
     main()

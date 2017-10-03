@@ -37,10 +37,6 @@ def nearest_neighbor(image, fx, fy):
 
     image_new = np.zeros((w_new, h_new))
 
-    # print("Old Image Shape:", image.shape)
-    # print("New Image Shape:", image_new.shape)
-    # print("Scale:", x_scale, y_scale)
-
     for row in range(w_new):
         for col in range(h_new):
 
@@ -73,10 +69,8 @@ def bilinear_interpolation(image, fx, fy):
 
     image_new = np.zeros((w_new, h_new))
 
-    for row in range(w_new-1):
-        for col in range(h_new-1):
-            # i = min(row / x_scale, w_old - 1)
-            # j = min(col / y_scale, h_old - 1)
+    for row in range(w_new):
+        for col in range(h_new):
 
             i = row / x_scale
             j = col / y_scale
@@ -87,20 +81,14 @@ def bilinear_interpolation(image, fx, fy):
                 continue
 
             unk = {'x': i, 'y': j}
-
             p11 = {'x': min(floor(row / x_scale), w_old - 1),
                    'y': min(floor(col / y_scale), h_old - 1)}
             p12 = {'x': min(floor(row / x_scale), w_old - 1),
                    'y': min(floor(col / y_scale) + 1, h_old - 1)}
-
-            # assert p11['y'] != p12['y'], "p11 and p12 are the same point: {} - {}".format(p11, p12)
-
             p21 = {'x': min(floor(row / x_scale) + 1, w_old - 1),
                    'y': min(floor(col / y_scale), h_old - 1)}
             p22 = {'x': min(floor(row / x_scale) + 1, w_old - 1),
                    'y': min(floor(col / y_scale) + 1, h_old - 1)}
-
-            # assert p21['y'] != p22['y'], "p21 and p22 are the same point"
 
             p11['intensity'] = image[p11['x'], p11['y']]
             p12['intensity'] = image[p12['x'], p12['y']]

@@ -3,10 +3,9 @@ import cv2
 from collections import Counter
 
 
-def get_sq_window(image, x, y):
+def _get_sq_window(image, x, y):
     coords = []
     subimg = []
-    # subimg = np.zeros((3, 3))
     n, m = image.shape
     sq_window = [(-1, -1), (-1, 0), (-1, 1),
                  ( 0, -1), ( 0, 0), ( 0, 1),
@@ -20,11 +19,10 @@ def get_sq_window(image, x, y):
 
         coords.append((ii, jj))
         subimg.append(image[ii, jj] if 0 <= xx < n and 0 <= yy < m else 0.0)
-        # subimg[i + 1, j + 1] = image[ii, jj] if 0 <= xx < n and 0 <= yy < m else 0.0
 
     return coords, subimg
 
-def pick_from_candidates(regions):
+def _pick_from_candidates(regions):
     counter = Counter(regions)
     reg, count = counter.most_common(1)[0]
 
@@ -32,17 +30,22 @@ def pick_from_candidates(regions):
     if reg != 0.0 and count > 2:
         return reg
 
-    # Pick the first region that appear
+    # Pick the first region that comes across
     for region in regions:
         if region:
             return region
     return 0.0
 
 def blob_coloring(image, win='8px'):
+    """Uses the blob coloring algorithm based on 8 pixel window assign region names
+    takes a input:
+    image: binary image
+    return: a list of regions"""
+
     if win == '3px':
-        return _blob_coloring_3px(image)
+        return _blob_coloring_3px(image)  # Implementation of 3 pixel window
     elif win == '8px':
-        return _blob_coloring_8px(image)
+        return _blob_coloring_8px(image)  # Implementation of 8 pixel window
 
 
 def _blob_coloring_8px(image):
@@ -52,52 +55,24 @@ def _blob_coloring_8px(image):
     for i in range(image.shape[0]):
         for j in range(image.shape[1]):
 
-            # print("=====================================", i, j)
-
             px_curr = image[i, j]
-            coords, window = get_sq_window(image, i, j)
-
-            # print("Coords:")
-            # print("\t", coords[:3])
-            # print("\t", coords[3:6])
-            # print("\t", coords[6:])
-            # print()
-            # print("Window:")
-            # print("\t", window[:3])
-            # print("\t", window[3:6])
-            # print("\t", window[6:])
-            # print()
+            coords, window = _get_sq_window(image, i, j)
 
             # Order matters for priority
-            candidates = [regions[coords[3]], regions[coords[0]], regions[coords[1]], regions[coords[2]]]
-            cand_color = pick_from_candidates(candidates)
-
-            # print("Candidate:", cand_color)
+            candidates = [regions[coords[0]], regions[coords[1]], regions[coords[2]], regions[coords[3]]]
+            cand_color = _pick_from_candidates(candidates)
 
             if cand_color and px_curr:
-                for l, px in enumerate(window[:]):
+                for l, px in enumerate(window[:]):  # Tagging all the neighbors or just the seen ones yielded the same
                     if px:
                         regions[coords[l]] = cand_color
             elif px_curr:
                 regions[i, j] = k
-                # for l, px in enumerate(window[:]):
-                #     if px:
-                #         regions[coords[l]] = k
                 k += 1
-                # print("K changed:", k)
-
-            # print()
-            # print(regions)
-            # print()
 
     return regions
 
 def _blob_coloring_3px(image):
-    """Uses the blob coloring algorithm based on 8 pixel window assign region names
-    takes a input:
-    image: binary image
-    return: a list of regions"""
-
     k = 1
     regions = np.zeros(image.shape)
 
@@ -155,7 +130,7 @@ def _blob_coloring_3px(image):
                     # regions[i-1, j] = lft
     return regions
 
-def compute_statistics(region):
+def compute_statistics(region, filter=15):
     """Compute cell statistics area and location
     takes as input
     region: a list of pixels in a region
@@ -180,26 +155,19 @@ def compute_statistics(region):
     for label in labels:
         area = len(labels[label])
 
-        if area > 15:
+        if area > filter:
             ranges = list(zip(*labels[label]))
-
-            # i_min, i_max = min(ranges[0]), max(ranges[0])
-            # j_min, j_max = min(ranges[1]), max(ranges[1])
-            #
-            # i_center = int((i_min + i_max) / 2)
-            # j_center = int((j_min + j_max) / 2)
 
             i_center = int(sum(ranges[0]) / area)
             j_center = int(sum(ranges[1]) / area)
 
             stat = {
                 'area': area,
-                'centroid': (i_center, j_center),
-                # 'pixels': labels[label]
+                'centroid': (i_center, j_center)
             }
 
             stats[label] = stat
-            print("Region: {}, Area: {}, Centroid: {}".format(label, area, stat['centroid']))
+            print("Region: {},\tArea: {},\tCentroid: {}".format(label, area, stat['centroid']))
 
     return stats
 
@@ -218,52 +186,22 @@ def mark_regions_image(regions, stats):
                 image[i, j] = 255
 
     for stat in stats.values():
-        text = "*{}".format(stat['area'])
+        text = '*'  # + str(stat['area'])
         center = stat['centroid']
-        image[center] = 0.0
-        # cv2.putText(image, text, center, cv2.FONT_HERSHEY_SIMPLEX, 0.2, 0)
+        image[center] = 0.0  # TODO: find a way to add text to image
+        # cv2.putText(image, text, center, cv2.FONT_HERSHEY_PLAIN, 0.2, 0)
 
     return image
 
 
-def unit_test_blob_coloring():
+def _unit_test_blob_coloring():
     """
     Performs blob coloring on a dummy binary image.
     """
-    # bin_image = np.array([
-    #     [0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0.],
-    #     [0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	255.0,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0.],
-    #     [0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	255.0,	255.0,	255.0,	255.0,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0.],
-    #     [0. ,	0. ,	0. ,	0. ,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	0. ,	0. ,	0. ,	0. ,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	0. ,	0. ,	0. ,	0. ,	0.],
-    #     [0. ,	0. ,	0. ,	0. ,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	0. ,	0. ,	0. ,	0.],
-    #     [0. ,	0. ,	0. ,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	0. ,	0. ,	0.],
-    #     [0. ,	0. ,	0. ,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	0. ,	0. ,	0.],
-    #     [0. ,	0. ,	0. ,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	0. ,	0.],
-    #     [0. ,	0. ,	0. ,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	0. ,	0.],
-    #     [0. ,	0. ,	0. ,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	0. ,	0.],
-    #     [0. ,	0. ,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	0. ,	0.],
-    #     [0. ,	0. ,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	0. ,	0.],
-    #     [0. ,	0. ,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	0. ,	0.],
-    #     [0. ,	0. ,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	0. ,	0.],
-    #     [0. ,	0. ,	0. ,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	0. ,	0.],
-    #     [0. ,	0. ,	0. ,	0. ,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	0. ,	0.],
-    #     [0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	0. ,	0.],
-    #     [0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	0. ,	0. ,	0.],
-    #     [0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	0. ,	0. ,	0.],
-    #     [0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	0. ,	0. ,	0. ,	0.],
-    #     [0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	0. ,	0. ,	0. ,	0.],
-    #     [0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	0. ,	0. ,	0. ,	0. ,	0.],
-    #     [0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	255.0,	0. ,	0. ,	0. ,	0. ,	0.],
-    #     [0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	255.0,	255.0,	255.0,	255.0,	255.0,	0. ,	0. ,	0. ,	0. ,	0. ,	0.],
-    #     [0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0.],
-    #     [0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0.],
-    #     [0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0. ,	0.]
-    # ])
-
     bin_image = np.array([
         [255., 255.,  0.,    255.],
-        [255., 0.,    0.,    0.],
-        [255., 255.,  0.,    0.],
+        [255., 0.,    255.,    0.],
+        [255., 255.,  0.,      0.],
         [0.,   0.,    0.,    255.],
         [255., 0.,    255.,  255.]
     ])
@@ -272,11 +210,8 @@ def unit_test_blob_coloring():
 
     print("Output matrix:")
     print(regions)
-    # for i in range(regions.shape[0]):
-    #     row = regions[i, :].tolist()
-    #     print(',\t'.join(map(lambda n: str(n) if n else '  -', row)))
 
-    num_objects = 4
+    num_objects = 3
 
     labels = set(np.reshape(regions, (regions.shape[0] * regions.shape[1])).tolist())
     assert len(labels) - 1 == num_objects, "Test failed! The algorithm found {} object(s) but there are {}!".format(len(labels) - 1, num_objects)
@@ -285,5 +220,5 @@ def unit_test_blob_coloring():
 
 
 if __name__ == "__main__":
-    unit_test_blob_coloring()
+    _unit_test_blob_coloring()
 
