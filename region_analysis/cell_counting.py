@@ -136,10 +136,6 @@ def compute_statistics(region, filter=15):
     region: a list of pixels in a region
     returns: area"""
 
-    # Please print your region statistics to stdout
-    # <region number>: <location or center>, <area>
-    # print(stats)
-
     labels = dict()
     rows = region.shape[0]
     cols = region.shape[1]
@@ -186,11 +182,9 @@ def mark_regions_image(regions, stats):
                 image[i, j] = 255
 
     for stat in stats.values():
-        text = '*'  # + str(stat['area'])
-        center = stat['centroid']
-        image[center] = 0.0  # TODO: find a way to add text to image
-        # cv2.putText(image, text, center, cv2.FONT_HERSHEY_PLAIN, 0.2, 0)
-
+        text = '*' + str(stat['area'])
+        x, y = stat['centroid']
+        cv2.putText(image, text, (y, x), cv2.FONT_HERSHEY_PLAIN, 0.5, 0)
     return image
 
 
