@@ -57,14 +57,18 @@
 
 ### a) Binarization
 
-I calculated the optimal threshold
-
-
+I calculated the optimal threshold based on the histogram of the image:
+* I initilized the means with 0s 
+* I calculated the expectations of each of the halves in the bimodal distribution
+* I set the threshold with the average of the expectations
+* Keep doing this while the previous means minus the expectations are (at least one) different from 0
 
 In addition, I also switch between colors after the image have been binarized if the majority of the pixels is white. For example,
 in the case of the `cell2.jpg` image the background is white and cells are black. I applied an not oporator to have thei inverse effect.
 
 #### Results
+
+![Alt text](./output/cellct/cells-hist.png)
 
 ![Alt text](./output/cellct/binary_image_1003-075847.jpg)
 
@@ -92,23 +96,30 @@ For the 3-pixel window I used the conditions given in class:
 However, the results were not that accurate. Hence, I moved to the 8-pixel window implementation
 * For this implementation I have a real window that contains coordinates in terms of `{-1, 0, 1}` (i.e. north is `(0,1)` and south is `(1,0)`).
 * I took care of the borders replicating the border pixels into a fake row or column of the original matrix
-
+* While iterating I check the cells 0, 1, 2, and 3 of the window (check diagram below).
+    * If at least one has a color, I use that color for the cell being evaluated
+    * If there are multiple colors, I choose the one that has the majority
+    * If there are no majority I pick the first color I find running in order from 0 to 3 and then I color everythin with this tag
+  
  ```
   ____ ____ ____
- |    |    |    |
+ | 0  | 1  |  2 |
  |____|____|____|
- |    |  . | <-------- The pixel being evaluated
+ | 3  |  . | <-------- The pixel being evaluated
  |____|____|____|
  |    |    |    |
  |____|____|____|
  
 ```
 
-#### Results
+### c) Stats
+
+The stats were calculated as follows:
+* Centroid: the average of each pixel position per axis per region
+* Area: the number of pixel per region
+
 
 ![Alt text](./output/cellct/cell_stats_1003-184019.jpg)
-
-### c) Stats
 
 Unfortunately, the resolution of the `cells.png` image is low and we cannot clearly see the numbers of the area. 
 However, those details are posted below for reference: 
